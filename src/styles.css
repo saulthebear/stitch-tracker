@@ -1,0 +1,14 @@
+@import "tailwindcss";
+
+html { background: #020617; color-scheme: dark; }
+body { margin: 0; min-width: 320px; }
+button { cursor: pointer; }
+button:disabled { cursor: default; }
+button:focus-visible { outline: 2px solid #a5b4fc; outline-offset: 3px; }
+input { font-size: 16px !important; }
+.app-shell { padding-top: env(safe-area-inset-top); }
+.pattern-panel { padding-bottom: max(1rem, env(safe-area-inset-bottom)); }
+@media (max-height: 600px) {
+  .app-shell { height: auto; max-height: none; min-height: 100dvh; overflow: visible; }
+  .pattern-panel { overflow: visible; }
+}
