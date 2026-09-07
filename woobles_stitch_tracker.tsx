@@ -1,6 +1,8 @@
 import { useState, type ChangeEvent, type FormEvent } from 'react';
 import { useSharedPattern, type Round } from './src/useSharedPattern';
 import { RowEditor } from './src/RowEditor';
+import { RowProgress } from './src/RowProgress';
+import { parsePatternTotal } from './src/pattern';
 import { Plus, Minus, ArrowRight, CheckCircle2, Circle, Trash2, PlusCircle, Play, Pencil } from 'lucide-react';
 
 export default function App() {
@@ -11,33 +13,10 @@ export default function App() {
   const [newTotal, setNewTotal] = useState('');
   const locked = !connected || busy;
 
-  const parsePattern = (text: string) => {
-    if (!text) return null;
-    const explicitTotalMatch = text.match(/\(\s*(\d+)\s*\)\s*$/);
-    if (explicitTotalMatch) return parseInt(explicitTotalMatch[1], 10);
-
-    const bracketMatch = text.match(/\[(.*?)\]\s*x\s*(\d+)/i);
-    if (bracketMatch) {
-      const inside = bracketMatch[1];
-      const multiplier = parseInt(bracketMatch[2], 10);
-      const parts = inside.split(',');
-      let sum = 0;
-      
-      parts.forEach(part => {
-        part = part.trim().toLowerCase();
-        const numMatch = part.match(/^(\d+)/);
-        const count = numMatch ? parseInt(numMatch[1], 10) : 1;
-        sum += part.includes('inc') ? count * 2 : count * 1; 
-      });
-      return sum * multiplier;
-    }
-    return null;
-  };
-
   const handleNoteChange = (e: ChangeEvent<HTMLInputElement>) => {
     const text = e.target.value;
     setNewNote(text);
-    const parsedTotal = parsePattern(text);
+    const parsedTotal = parsePatternTotal(text);
     if (parsedTotal) setNewTotal(parsedTotal.toString());
   };
 
@@ -113,6 +92,8 @@ export default function App() {
                 )}
               </div>
 
+              <RowProgress round={activeRound} large />
+
               {/* Big Controls */}
               <div className="flex gap-3 h-24">
                 <button
@@ -162,7 +143,7 @@ export default function App() {
           {/* List of Rounds */}
           <div className="space-y-2">
             <h3 className="text-sm font-bold text-slate-500 uppercase tracking-wider pl-1">Pattern Rows</h3>
-            <p className="text-xs text-slate-400 pl-1 pb-1">Sorted by number · “Rnd 4” and “4” sort together</p>
+            <p className="text-xs text-slate-400 pl-1 pb-1">Sorted by number</p>
             
             {rounds.length === 0 ? (
               <div className="text-center py-6 text-slate-600 italic text-sm">
@@ -194,10 +175,11 @@ export default function App() {
                       {r.completed ? <CheckCircle2 size={24} /> : <Circle size={24} />}
                     </button>
 
+                    <div className="flex-1 min-w-0 flex flex-col justify-center gap-2 py-1">
                     {/* Row Info (Click to activate) */}
                     <button
                       type="button"
-                      className="flex-1 min-w-0 text-left py-1"
+                      className="min-w-0 text-left"
                       onClick={() => setActiveId(r.id)}
                       disabled={locked}
                       aria-label={`Track ${r.label}`}
@@ -209,9 +191,11 @@ export default function App() {
                         {isActive && <span className="text-[10px] font-bold bg-indigo-600 px-2 py-0.5 rounded-full text-white uppercase tracking-wider">Active</span>}
                       </div>
                       <p className={`text-sm mt-0.5 line-clamp-1 ${r.completed ? 'text-slate-600' : 'text-slate-400'}`}>
-                        {r.note || "No note"} • {r.totalStitches} sts
+                        {r.note || "No note"} • {r.currentStitch}/{r.totalStitches} sts
                       </p>
                     </button>
+                    <RowProgress round={r} />
+                    </div>
 
                     {/* Play/Select & Delete Actions */}
                     <div className="flex flex-col gap-1 justify-center shrink-0">
